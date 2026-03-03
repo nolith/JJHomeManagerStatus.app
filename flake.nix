@@ -22,10 +22,15 @@
         inputs.treefmt-nix.flakeModule
       ];
 
+      flake = {
+        homeManagerModules.default = import ./nix/modules/home-manager.nix;
+        homeManagerModules.jj-home-manager-status = import ./nix/modules/home-manager.nix;
+      };
+
       perSystem =
         { pkgs, ... }:
         {
-          packages.default = pkgs.swiftPackages.callPackage ./package.nix { };
+          packages.default = pkgs.swiftPackages.callPackage ./nix/package.nix { };
 
           treefmt = {
             projectRootFile = "flake.nix";

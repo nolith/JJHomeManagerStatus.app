@@ -10,12 +10,12 @@ swift.stdenv.mkDerivation {
   version = "0.1.0";
 
   src = lib.fileset.toSource {
-    root = ./.;
+    root = ./..;
     fileset = lib.fileset.unions [
-      ./Package.swift
-      ./Sources
-      ./Tests
-      ./Info.plist
+      ./../Package.swift
+      ./../Sources
+      ./../Tests
+      ./../Info.plist
     ];
   };
 
@@ -39,7 +39,7 @@ swift.stdenv.mkDerivation {
     mkdir -p "$APP/Contents/MacOS"
 
     cp "$binPath/HomeManagerStatus" "$APP/Contents/MacOS/HomeManagerStatus"
-    cp ${./Info.plist} "$APP/Contents/Info.plist"
+    cp ${./../Info.plist} "$APP/Contents/Info.plist"
 
     runHook postInstall
   '';
