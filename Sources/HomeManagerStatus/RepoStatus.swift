@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Represents the current status of the jj repository relative to trunk().
-struct RepoStatus: Equatable, Sendable {
+struct RepoStatus: Equatable {
   /// Number of commits on the current working copy ancestry that are not on trunk().
   let ahead: Int
   /// Number of commits on trunk() that are not on the current working copy ancestry.
@@ -16,11 +16,11 @@ struct RepoStatus: Equatable, Sendable {
 
   // MARK: - Convenience initializers
 
-  static func synced(dirty: Bool = false, at date: Date = .now) -> RepoStatus {
+  static func synced(dirty: Bool = false, at date: Date = Date()) -> RepoStatus {
     RepoStatus(ahead: 0, behind: 0, dirty: dirty, error: nil, checkedAt: date)
   }
 
-  static func error(_ message: String, at date: Date = .now) -> RepoStatus {
+  static func error(_ message: String, at date: Date = Date()) -> RepoStatus {
     RepoStatus(ahead: 0, behind: 0, dirty: false, error: message, checkedAt: date)
   }
 

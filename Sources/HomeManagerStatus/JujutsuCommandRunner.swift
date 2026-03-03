@@ -1,7 +1,7 @@
 import Foundation
 
 /// Protocol for running jj commands. Abstracted for testability.
-protocol JujutsuCommandRunner: Sendable {
+protocol JujutsuCommandRunner {
   /// Run a jj command with the given arguments against a repository.
   ///
   /// - Parameters:

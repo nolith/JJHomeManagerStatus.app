@@ -44,7 +44,7 @@ enum StatusParser {
     aheadOutput: String,
     behindOutput: String,
     dirtyOutput: String,
-    at date: Date = .now
+    at date: Date = Date()
   ) -> RepoStatus {
     let ahead = parseCommitCount(from: aheadOutput)
     let behind = parseCommitCount(from: behindOutput)

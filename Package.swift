@@ -1,14 +1,11 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 5.9
 
 import PackageDescription
 
 let package = Package(
   name: "HomeManagerStatus",
   platforms: [
-    .macOS(.v14)
-  ],
-  dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-testing.git", branch: "release/6.2")
+    .macOS(.v13)
   ],
   targets: [
     .executableTarget(
@@ -17,10 +14,7 @@ let package = Package(
     ),
     .testTarget(
       name: "HomeManagerStatusTests",
-      dependencies: [
-        "HomeManagerStatus",
-        .product(name: "Testing", package: "swift-testing"),
-      ],
+      dependencies: ["HomeManagerStatus"],
       path: "Tests/HomeManagerStatusTests"
     ),
   ]

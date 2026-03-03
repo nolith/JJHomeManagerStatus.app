@@ -25,6 +25,8 @@
       perSystem =
         { pkgs, ... }:
         {
+          packages.default = pkgs.swiftPackages.callPackage ./package.nix { };
+
           treefmt = {
             projectRootFile = "flake.nix";
             programs = {

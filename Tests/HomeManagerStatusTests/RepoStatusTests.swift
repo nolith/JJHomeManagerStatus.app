@@ -1,225 +1,224 @@
 import SwiftUI
-import Testing
+import XCTest
 
 @testable import HomeManagerStatus
 
-struct RepoStatusTests {
+final class RepoStatusTests: XCTestCase {
   let fixedDate = Date(timeIntervalSince1970: 1_700_000_000)
 
   // MARK: - Boolean state properties
 
-  @Test func syncedStatus() {
+  func testSyncedStatus() {
     let status = RepoStatus(ahead: 0, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.isSynced)
-    #expect(!status.isAhead)
-    #expect(!status.isBehind)
-    #expect(!status.isDiverged)
-    #expect(!status.hasError)
+    XCTAssertTrue(status.isSynced)
+    XCTAssertFalse(status.isAhead)
+    XCTAssertFalse(status.isBehind)
+    XCTAssertFalse(status.isDiverged)
+    XCTAssertFalse(status.hasError)
   }
 
-  @Test func aheadOnly() {
+  func testAheadOnly() {
     let status = RepoStatus(ahead: 3, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(!status.isSynced)
-    #expect(status.isAhead)
-    #expect(!status.isBehind)
-    #expect(!status.isDiverged)
+    XCTAssertFalse(status.isSynced)
+    XCTAssertTrue(status.isAhead)
+    XCTAssertFalse(status.isBehind)
+    XCTAssertFalse(status.isDiverged)
   }
 
-  @Test func behindOnly() {
+  func testBehindOnly() {
     let status = RepoStatus(ahead: 0, behind: 5, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(!status.isSynced)
-    #expect(!status.isAhead)
-    #expect(status.isBehind)
-    #expect(!status.isDiverged)
+    XCTAssertFalse(status.isSynced)
+    XCTAssertFalse(status.isAhead)
+    XCTAssertTrue(status.isBehind)
+    XCTAssertFalse(status.isDiverged)
   }
 
-  @Test func diverged() {
+  func testDiverged() {
     let status = RepoStatus(ahead: 2, behind: 3, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(!status.isSynced)
-    #expect(status.isAhead)
-    #expect(status.isBehind)
-    #expect(status.isDiverged)
+    XCTAssertFalse(status.isSynced)
+    XCTAssertTrue(status.isAhead)
+    XCTAssertTrue(status.isBehind)
+    XCTAssertTrue(status.isDiverged)
   }
 
-  @Test func errorState() {
+  func testErrorState() {
     let status = RepoStatus.error("jj not found", at: fixedDate)
-    #expect(status.hasError)
-    #expect(!status.isSynced)
-    #expect(!status.isAhead)
-    #expect(!status.isBehind)
-    #expect(!status.isDiverged)
+    XCTAssertTrue(status.hasError)
+    XCTAssertFalse(status.isSynced)
+    XCTAssertFalse(status.isAhead)
+    XCTAssertFalse(status.isBehind)
+    XCTAssertFalse(status.isDiverged)
   }
 
   // MARK: - Menu bar icon
 
-  @Test func menuBarIconSynced() {
+  func testMenuBarIconSynced() {
     let status = RepoStatus.synced(at: fixedDate)
-    #expect(status.menuBarIcon == "checkmark.circle.fill")
+    XCTAssertEqual(status.menuBarIcon, "checkmark.circle.fill")
   }
 
-  @Test func menuBarIconAhead() {
+  func testMenuBarIconAhead() {
     let status = RepoStatus(ahead: 1, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarIcon == "arrow.up.circle.fill")
+    XCTAssertEqual(status.menuBarIcon, "arrow.up.circle.fill")
   }
 
-  @Test func menuBarIconBehind() {
+  func testMenuBarIconBehind() {
     let status = RepoStatus(ahead: 0, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarIcon == "arrow.down.circle.fill")
+    XCTAssertEqual(status.menuBarIcon, "arrow.down.circle.fill")
   }
 
-  @Test func menuBarIconDiverged() {
+  func testMenuBarIconDiverged() {
     let status = RepoStatus(ahead: 2, behind: 3, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarIcon == "arrow.up.arrow.down.circle.fill")
+    XCTAssertEqual(status.menuBarIcon, "arrow.up.arrow.down.circle.fill")
   }
 
-  @Test func menuBarIconError() {
+  func testMenuBarIconError() {
     let status = RepoStatus.error("oops", at: fixedDate)
-    #expect(status.menuBarIcon == "exclamationmark.triangle.fill")
+    XCTAssertEqual(status.menuBarIcon, "exclamationmark.triangle.fill")
   }
 
   // MARK: - Menu bar color
 
-  @Test func menuBarColorSynced() {
+  func testMenuBarColorSynced() {
     let status = RepoStatus.synced(at: fixedDate)
-    #expect(status.menuBarColor == .green)
+    XCTAssertEqual(status.menuBarColor, .green)
   }
 
-  @Test func menuBarColorAhead() {
+  func testMenuBarColorAhead() {
     let status = RepoStatus(ahead: 1, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarColor == .blue)
+    XCTAssertEqual(status.menuBarColor, .blue)
   }
 
-  @Test func menuBarColorBehind() {
+  func testMenuBarColorBehind() {
     let status = RepoStatus(ahead: 0, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarColor == .orange)
+    XCTAssertEqual(status.menuBarColor, .orange)
   }
 
-  @Test func menuBarColorDiverged() {
+  func testMenuBarColorDiverged() {
     let status = RepoStatus(ahead: 1, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarColor == .yellow)
+    XCTAssertEqual(status.menuBarColor, .yellow)
   }
 
-  @Test func menuBarColorError() {
+  func testMenuBarColorError() {
     let status = RepoStatus.error("oops", at: fixedDate)
-    #expect(status.menuBarColor == .red)
+    XCTAssertEqual(status.menuBarColor, .red)
   }
 
   // MARK: - Menu bar text
 
-  @Test func menuBarTextSynced() {
+  func testMenuBarTextSynced() {
     let status = RepoStatus.synced(at: fixedDate)
-    #expect(status.menuBarText == "")
+    XCTAssertEqual(status.menuBarText, "")
   }
 
-  @Test func menuBarTextAhead() {
+  func testMenuBarTextAhead() {
     let status = RepoStatus(ahead: 2, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarText == "\u{2191}2")
+    XCTAssertEqual(status.menuBarText, "\u{2191}2")
   }
 
-  @Test func menuBarTextBehind() {
+  func testMenuBarTextBehind() {
     let status = RepoStatus(ahead: 0, behind: 7, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarText == "\u{2193}7")
+    XCTAssertEqual(status.menuBarText, "\u{2193}7")
   }
 
-  @Test func menuBarTextDiverged() {
+  func testMenuBarTextDiverged() {
     let status = RepoStatus(ahead: 2, behind: 3, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarText == "\u{2191}2\u{2193}3")
+    XCTAssertEqual(status.menuBarText, "\u{2191}2\u{2193}3")
   }
 
-  @Test func menuBarTextError() {
+  func testMenuBarTextError() {
     let status = RepoStatus.error("oops", at: fixedDate)
-    #expect(status.menuBarText == "!")
+    XCTAssertEqual(status.menuBarText, "!")
   }
 
-  @Test func menuBarTextLargeNumbers() {
+  func testMenuBarTextLargeNumbers() {
     let status = RepoStatus(
       ahead: 42, behind: 100, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarText == "\u{2191}42\u{2193}100")
+    XCTAssertEqual(status.menuBarText, "\u{2191}42\u{2193}100")
   }
 
   // MARK: - Menu bar label (text + dirty dot)
 
-  @Test func menuBarLabelSyncedClean() {
+  func testMenuBarLabelSyncedClean() {
     let status = RepoStatus.synced(dirty: false, at: fixedDate)
-    #expect(status.menuBarLabel == "")
+    XCTAssertEqual(status.menuBarLabel, "")
   }
 
-  @Test func menuBarLabelSyncedDirty() {
+  func testMenuBarLabelSyncedDirty() {
     let status = RepoStatus.synced(dirty: true, at: fixedDate)
-    #expect(status.menuBarLabel == "\u{25CF}")
+    XCTAssertEqual(status.menuBarLabel, "\u{25CF}")
   }
 
-  @Test func menuBarLabelAheadDirty() {
+  func testMenuBarLabelAheadDirty() {
     let status = RepoStatus(ahead: 2, behind: 0, dirty: true, error: nil, checkedAt: fixedDate)
-    #expect(status.menuBarLabel == "\u{2191}2\u{25CF}")
+    XCTAssertEqual(status.menuBarLabel, "\u{2191}2\u{25CF}")
   }
 
-  @Test func menuBarLabelErrorNoDot() {
+  func testMenuBarLabelErrorNoDot() {
     let status = RepoStatus(
       ahead: 0, behind: 0, dirty: true, error: "err", checkedAt: fixedDate)
-    // Error state should not show dirty dot
-    #expect(status.menuBarLabel == "!")
+    XCTAssertEqual(status.menuBarLabel, "!")
   }
 
   // MARK: - Status description
 
-  @Test func statusDescriptionSynced() {
+  func testStatusDescriptionSynced() {
     let status = RepoStatus.synced(at: fixedDate)
-    #expect(status.statusDescription.contains("In sync with trunk"))
-    #expect(status.statusDescription.contains("Working copy is clean"))
+    XCTAssertTrue(status.statusDescription.contains("In sync with trunk"))
+    XCTAssertTrue(status.statusDescription.contains("Working copy is clean"))
   }
 
-  @Test func statusDescriptionAhead() {
+  func testStatusDescriptionAhead() {
     let status = RepoStatus(ahead: 1, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.statusDescription.contains("1 commit ahead of trunk"))
+    XCTAssertTrue(status.statusDescription.contains("1 commit ahead of trunk"))
   }
 
-  @Test func statusDescriptionAheadPlural() {
+  func testStatusDescriptionAheadPlural() {
     let status = RepoStatus(ahead: 5, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.statusDescription.contains("5 commits ahead of trunk"))
+    XCTAssertTrue(status.statusDescription.contains("5 commits ahead of trunk"))
   }
 
-  @Test func statusDescriptionBehind() {
+  func testStatusDescriptionBehind() {
     let status = RepoStatus(ahead: 0, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.statusDescription.contains("1 commit behind trunk"))
+    XCTAssertTrue(status.statusDescription.contains("1 commit behind trunk"))
   }
 
-  @Test func statusDescriptionBehindPlural() {
+  func testStatusDescriptionBehindPlural() {
     let status = RepoStatus(ahead: 0, behind: 3, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.statusDescription.contains("3 commits behind trunk"))
+    XCTAssertTrue(status.statusDescription.contains("3 commits behind trunk"))
   }
 
-  @Test func statusDescriptionDiverged() {
+  func testStatusDescriptionDiverged() {
     let status = RepoStatus(ahead: 2, behind: 3, dirty: false, error: nil, checkedAt: fixedDate)
-    #expect(status.statusDescription.contains("2 commits ahead of trunk"))
-    #expect(status.statusDescription.contains("3 commits behind trunk"))
+    XCTAssertTrue(status.statusDescription.contains("2 commits ahead of trunk"))
+    XCTAssertTrue(status.statusDescription.contains("3 commits behind trunk"))
   }
 
-  @Test func statusDescriptionDirty() {
+  func testStatusDescriptionDirty() {
     let status = RepoStatus(ahead: 0, behind: 0, dirty: true, error: nil, checkedAt: fixedDate)
-    #expect(status.statusDescription.contains("Working copy has changes"))
+    XCTAssertTrue(status.statusDescription.contains("Working copy has changes"))
   }
 
-  @Test func statusDescriptionError() {
+  func testStatusDescriptionError() {
     let status = RepoStatus.error("jj not found", at: fixedDate)
-    #expect(status.statusDescription.contains("Error: jj not found"))
+    XCTAssertTrue(status.statusDescription.contains("Error: jj not found"))
   }
 
   // MARK: - Convenience initializers
 
-  @Test func syncedConvenience() {
+  func testSyncedConvenience() {
     let status = RepoStatus.synced(dirty: true, at: fixedDate)
-    #expect(status.ahead == 0)
-    #expect(status.behind == 0)
-    #expect(status.dirty)
-    #expect(status.error == nil)
+    XCTAssertEqual(status.ahead, 0)
+    XCTAssertEqual(status.behind, 0)
+    XCTAssertTrue(status.dirty)
+    XCTAssertNil(status.error)
   }
 
-  @Test func errorConvenience() {
+  func testErrorConvenience() {
     let status = RepoStatus.error("boom", at: fixedDate)
-    #expect(status.ahead == 0)
-    #expect(status.behind == 0)
-    #expect(!status.dirty)
-    #expect(status.error == "boom")
+    XCTAssertEqual(status.ahead, 0)
+    XCTAssertEqual(status.behind, 0)
+    XCTAssertFalse(status.dirty)
+    XCTAssertEqual(status.error, "boom")
   }
 }

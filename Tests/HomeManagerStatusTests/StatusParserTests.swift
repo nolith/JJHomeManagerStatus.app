@@ -1,162 +1,158 @@
 import Foundation
-import Testing
+import XCTest
 
 @testable import HomeManagerStatus
 
-struct StatusParserTests {
+final class StatusParserTests: XCTestCase {
   let fixedDate = Date(timeIntervalSince1970: 1_700_000_000)
 
   // MARK: - parseCommitCount
 
-  @Test func parseCommitCountEmpty() {
-    #expect(StatusParser.parseCommitCount(from: "") == 0)
+  func testParseCommitCountEmpty() {
+    XCTAssertEqual(StatusParser.parseCommitCount(from: ""), 0)
   }
 
-  @Test func parseCommitCountWhitespaceOnly() {
-    #expect(StatusParser.parseCommitCount(from: "   \n  \n  ") == 0)
+  func testParseCommitCountWhitespaceOnly() {
+    XCTAssertEqual(StatusParser.parseCommitCount(from: "   \n  \n  "), 0)
   }
 
-  @Test func parseCommitCountSingleCommit() {
-    #expect(StatusParser.parseCommitCount(from: "abc123\n") == 1)
+  func testParseCommitCountSingleCommit() {
+    XCTAssertEqual(StatusParser.parseCommitCount(from: "abc123\n"), 1)
   }
 
-  @Test func parseCommitCountSingleCommitNoNewline() {
-    #expect(StatusParser.parseCommitCount(from: "abc123") == 1)
+  func testParseCommitCountSingleCommitNoNewline() {
+    XCTAssertEqual(StatusParser.parseCommitCount(from: "abc123"), 1)
   }
 
-  @Test func parseCommitCountMultipleCommits() {
+  func testParseCommitCountMultipleCommits() {
     let output = "abc123\ndef456\nghi789\n"
-    #expect(StatusParser.parseCommitCount(from: output) == 3)
+    XCTAssertEqual(StatusParser.parseCommitCount(from: output), 3)
   }
 
-  @Test func parseCommitCountMultipleCommitsNoTrailingNewline() {
+  func testParseCommitCountMultipleCommitsNoTrailingNewline() {
     let output = "abc123\ndef456\nghi789"
-    #expect(StatusParser.parseCommitCount(from: output) == 3)
+    XCTAssertEqual(StatusParser.parseCommitCount(from: output), 3)
   }
 
-  @Test func parseCommitCountWithLeadingTrailingWhitespace() {
+  func testParseCommitCountWithLeadingTrailingWhitespace() {
     let output = "\n  abc123\ndef456  \n"
     // After trimming: "abc123\ndef456" => 2 lines
-    #expect(StatusParser.parseCommitCount(from: output) == 2)
+    XCTAssertEqual(StatusParser.parseCommitCount(from: output), 2)
   }
 
   // MARK: - parseDirtyStatus
 
-  @Test func parseDirtyStatusClean() throws {
+  func testParseDirtyStatusClean() throws {
     let result = try StatusParser.parseDirtyStatus(from: "clean")
-    #expect(result == false)
+    XCTAssertFalse(result)
   }
 
-  @Test func parseDirtyStatusDirty() throws {
+  func testParseDirtyStatusDirty() throws {
     let result = try StatusParser.parseDirtyStatus(from: "dirty")
-    #expect(result == true)
+    XCTAssertTrue(result)
   }
 
-  @Test func parseDirtyStatusCleanWithWhitespace() throws {
+  func testParseDirtyStatusCleanWithWhitespace() throws {
     let result = try StatusParser.parseDirtyStatus(from: "  clean  \n")
-    #expect(result == false)
+    XCTAssertFalse(result)
   }
 
-  @Test func parseDirtyStatusDirtyWithWhitespace() throws {
+  func testParseDirtyStatusDirtyWithWhitespace() throws {
     let result = try StatusParser.parseDirtyStatus(from: "\ndirty\n")
-    #expect(result == true)
+    XCTAssertTrue(result)
   }
 
-  @Test func parseDirtyStatusUnexpectedOutput() {
-    #expect(throws: StatusParser.ParserError.self) {
-      try StatusParser.parseDirtyStatus(from: "unknown")
-    }
+  func testParseDirtyStatusUnexpectedOutput() {
+    XCTAssertThrowsError(try StatusParser.parseDirtyStatus(from: "unknown"))
   }
 
-  @Test func parseDirtyStatusEmptyOutput() {
-    #expect(throws: StatusParser.ParserError.self) {
-      try StatusParser.parseDirtyStatus(from: "")
-    }
+  func testParseDirtyStatusEmptyOutput() {
+    XCTAssertThrowsError(try StatusParser.parseDirtyStatus(from: ""))
   }
 
   // MARK: - parse (combined)
 
-  @Test func parseInSync() {
+  func testParseInSync() {
     let status = StatusParser.parse(
       aheadOutput: "",
       behindOutput: "",
       dirtyOutput: "clean",
       at: fixedDate
     )
-    #expect(status.ahead == 0)
-    #expect(status.behind == 0)
-    #expect(!status.dirty)
-    #expect(status.error == nil)
-    #expect(status.isSynced)
+    XCTAssertEqual(status.ahead, 0)
+    XCTAssertEqual(status.behind, 0)
+    XCTAssertFalse(status.dirty)
+    XCTAssertNil(status.error)
+    XCTAssertTrue(status.isSynced)
   }
 
-  @Test func parseAheadOnly() {
+  func testParseAheadOnly() {
     let status = StatusParser.parse(
       aheadOutput: "abc123\ndef456\n",
       behindOutput: "",
       dirtyOutput: "clean",
       at: fixedDate
     )
-    #expect(status.ahead == 2)
-    #expect(status.behind == 0)
-    #expect(!status.dirty)
-    #expect(status.isAhead)
+    XCTAssertEqual(status.ahead, 2)
+    XCTAssertEqual(status.behind, 0)
+    XCTAssertFalse(status.dirty)
+    XCTAssertTrue(status.isAhead)
   }
 
-  @Test func parseBehindOnly() {
+  func testParseBehindOnly() {
     let status = StatusParser.parse(
       aheadOutput: "",
       behindOutput: "abc123\ndef456\nghi789\n",
       dirtyOutput: "clean",
       at: fixedDate
     )
-    #expect(status.ahead == 0)
-    #expect(status.behind == 3)
-    #expect(status.isBehind)
+    XCTAssertEqual(status.ahead, 0)
+    XCTAssertEqual(status.behind, 3)
+    XCTAssertTrue(status.isBehind)
   }
 
-  @Test func parseDiverged() {
+  func testParseDiverged() {
     let status = StatusParser.parse(
       aheadOutput: "abc123\n",
       behindOutput: "def456\nghi789\n",
       dirtyOutput: "dirty",
       at: fixedDate
     )
-    #expect(status.ahead == 1)
-    #expect(status.behind == 2)
-    #expect(status.dirty)
-    #expect(status.isDiverged)
+    XCTAssertEqual(status.ahead, 1)
+    XCTAssertEqual(status.behind, 2)
+    XCTAssertTrue(status.dirty)
+    XCTAssertTrue(status.isDiverged)
   }
 
-  @Test func parseDirtyWorkingCopy() {
+  func testParseDirtyWorkingCopy() {
     let status = StatusParser.parse(
       aheadOutput: "",
       behindOutput: "",
       dirtyOutput: "dirty",
       at: fixedDate
     )
-    #expect(status.isSynced)
-    #expect(status.dirty)
+    XCTAssertTrue(status.isSynced)
+    XCTAssertTrue(status.dirty)
   }
 
-  @Test func parseInvalidDirtyOutputReturnsError() {
+  func testParseInvalidDirtyOutputReturnsError() {
     let status = StatusParser.parse(
       aheadOutput: "abc123\n",
       behindOutput: "",
       dirtyOutput: "garbage",
       at: fixedDate
     )
-    #expect(status.hasError)
-    #expect(status.error?.contains("Unexpected dirty status output") == true)
+    XCTAssertTrue(status.hasError)
+    XCTAssertTrue(status.error?.contains("Unexpected dirty status output") == true)
   }
 
-  @Test func parsePreservesDate() {
+  func testParsePreservesDate() {
     let status = StatusParser.parse(
       aheadOutput: "",
       behindOutput: "",
       dirtyOutput: "clean",
       at: fixedDate
     )
-    #expect(status.checkedAt == fixedDate)
+    XCTAssertEqual(status.checkedAt, fixedDate)
   }
 }

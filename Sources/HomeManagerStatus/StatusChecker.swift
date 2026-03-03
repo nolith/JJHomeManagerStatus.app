@@ -22,7 +22,7 @@ final class StatusChecker: ObservableObject {
     self.status = RepoStatus(
       ahead: 0, behind: 0, dirty: false,
       error: "Not yet checked",
-      checkedAt: .now
+      checkedAt: Date()
     )
   }
 
@@ -34,7 +34,7 @@ final class StatusChecker: ObservableObject {
     // Then schedule periodic checks
     timer = Timer.scheduledTimer(withTimeInterval: refreshInterval, repeats: true) {
       [weak self] _ in
-      guard let self else { return }
+      guard let self = self else { return }
       Task { @MainActor in
         await self.refresh()
       }
@@ -49,7 +49,7 @@ final class StatusChecker: ObservableObject {
 
   /// Perform a single status check.
   func refresh() async {
-    let now = Date.now
+    let now = Date()
 
     do {
       async let aheadOutput = runner.run(
