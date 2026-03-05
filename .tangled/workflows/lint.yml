@@ -1,0 +1,19 @@
+# Formatting checks using nix fmt (treefmt-nix)
+# Single source of truth: flake.nix treefmt config drives all formatting rules.
+
+when:
+  - event: ["push"]
+    branch: ["main"]
+  - event: ["pull_request"]
+    branch: ["main"]
+
+engine: "nixery"
+
+dependencies:
+  nixpkgs:
+    - nix
+    - git
+
+steps:
+  - name: "Check formatting"
+    command: "nix fmt -- --ci"

@@ -16,6 +16,7 @@
       systems = [
         "aarch64-darwin"
         "x86_64-darwin"
+        "x86_64-linux"
       ];
 
       imports = [
@@ -28,9 +29,15 @@
       };
 
       perSystem =
-        { pkgs, ... }:
         {
-          packages.default = pkgs.swiftPackages.callPackage ./nix/package.nix { };
+          pkgs,
+          lib,
+          ...
+        }:
+        {
+          packages = lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+            default = pkgs.swiftPackages.callPackage ./nix/package.nix { };
+          };
 
           treefmt = {
             projectRootFile = "flake.nix";
