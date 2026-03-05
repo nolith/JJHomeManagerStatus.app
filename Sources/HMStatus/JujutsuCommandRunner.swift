@@ -35,20 +35,44 @@ public struct LiveJujutsuCommandRunner: JujutsuCommandRunner {
     ]
   }
 
+  /// Search PATH directories for an executable named `name`.
+  static func findExecutable(named name: String, in paths: [String]) -> String? {
+    let fm = FileManager.default
+    for dir in paths {
+      let candidate = "\(dir)/\(name)"
+      if fm.isExecutableFile(atPath: candidate) {
+        return candidate
+      }
+    }
+    return nil
+  }
+
   public func run(args: [String], repoPath: String) async throws -> String {
     try await withCheckedThrowingContinuation { continuation in
       let process = Process()
-      process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-      process.arguments = ["jj"] + args
 
-      // Build environment with Nix-aware PATH
+      // Build the full PATH (extra paths + existing PATH)
       var env = ProcessInfo.processInfo.environment
       let existingPath = env["PATH"] ?? "/usr/bin:/bin"
       let extraPaths =
         additionalPaths.isEmpty
         ? Self.nixAwarePaths()
         : additionalPaths
-      env["PATH"] = (extraPaths + [existingPath]).joined(separator: ":")
+      let fullPath = (extraPaths + [existingPath]).joined(separator: ":")
+      let searchDirs = fullPath.components(separatedBy: ":")
+
+      // Find jj on PATH directly instead of relying on /usr/bin/env
+      // (which doesn't exist in nix sandboxes on Linux).
+      guard let jjPath = Self.findExecutable(named: "jj", in: searchDirs) else {
+        continuation.resume(
+          throwing: CommandError.launchFailed("jj not found in PATH: \(fullPath)"))
+        return
+      }
+
+      process.executableURL = URL(fileURLWithPath: jjPath)
+      process.arguments = args
+
+      env["PATH"] = fullPath
       process.environment = env
 
       process.currentDirectoryURL = URL(fileURLWithPath: repoPath)

@@ -15,10 +15,13 @@ public enum StatusChecker {
     at date: Date = Date()
   ) async -> RepoStatus {
     do {
+      // Use @- (parent of working copy) to exclude the jj working copy
+      // change itself — it's always present and its emptiness/dirtiness
+      // is tracked separately via the dirty check below.
       async let aheadOutput = runner.run(
         args: [
           "log",
-          "-r", "::@ ~ ::trunk()",
+          "-r", "::@- ~ ::trunk()",
           "--no-graph",
           "-T", "commit_id.short() ++ \"\\n\"",
         ],
@@ -28,7 +31,7 @@ public enum StatusChecker {
       async let behindOutput = runner.run(
         args: [
           "log",
-          "-r", "::trunk() ~ ::@",
+          "-r", "::trunk() ~ ::@-",
           "--no-graph",
           "-T", "commit_id.short() ++ \"\\n\"",
         ],

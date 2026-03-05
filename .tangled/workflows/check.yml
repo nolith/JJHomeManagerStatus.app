@@ -1,0 +1,21 @@
+# Build and integration tests using nix.
+# Builds hm-status CLI, then exercises it against scripted jj repositories.
+
+when:
+  - event: ["push"]
+    branch: ["main"]
+  - event: ["pull_request"]
+    branch: ["main"]
+
+engine: "nixery"
+
+dependencies:
+  nixpkgs:
+    - nix
+    - git
+
+steps:
+  - name: "Build hm-status"
+    command: "nix build .#hm-status"
+  - name: "Integration tests"
+    command: "nix build .#hm-status.tests.integration"

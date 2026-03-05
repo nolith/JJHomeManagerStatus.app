@@ -1,5 +1,5 @@
 {
-  description = "HomeManagerStatus — macOS menu bar app for jj repo status";
+  description = "HomeManagerStatus — macOS menu bar app and CLI for jj repo status";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
@@ -32,11 +32,21 @@
         {
           pkgs,
           lib,
+          self',
           ...
         }:
         {
-          packages = lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
-            default = pkgs.swiftPackages.callPackage ./nix/package.nix { };
+          packages =
+            lib.packagesFromDirectoryRecursive {
+              callPackage = pkgs.callPackage;
+              directory = ./nix/pkgs;
+            }
+            // lib.optionalAttrs pkgs.stdenv.hostPlatform.isDarwin {
+              default = self'.packages.app;
+            };
+
+          checks = {
+            hm-status-integration = self'.packages.hm-status.tests.integration;
           };
 
           treefmt = {
