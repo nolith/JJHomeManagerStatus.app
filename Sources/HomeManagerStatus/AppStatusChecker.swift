@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Orchestrates periodic jj status checks and publishes results for the UI.
 @MainActor
-final class StatusChecker: ObservableObject {
+final class AppStatusChecker: ObservableObject {
   @Published private(set) var status: RepoStatus
 
   let repoPath: String
@@ -50,48 +50,6 @@ final class StatusChecker: ObservableObject {
 
   /// Perform a single status check.
   func refresh() async {
-    let now = Date()
-
-    do {
-      async let aheadOutput = runner.run(
-        args: [
-          "log",
-          "-r", "::@ ~ ::trunk()",
-          "--no-graph",
-          "-T", "commit_id.short() ++ \"\\n\"",
-        ],
-        repoPath: repoPath
-      )
-
-      async let behindOutput = runner.run(
-        args: [
-          "log",
-          "-r", "::trunk() ~ ::@",
-          "--no-graph",
-          "-T", "commit_id.short() ++ \"\\n\"",
-        ],
-        repoPath: repoPath
-      )
-
-      async let dirtyOutput = runner.run(
-        args: [
-          "log",
-          "-r", "@",
-          "--no-graph",
-          "-T", "if(empty, \"clean\", \"dirty\")",
-        ],
-        repoPath: repoPath
-      )
-
-      let (ahead, behind, dirty) = try await (aheadOutput, behindOutput, dirtyOutput)
-      status = StatusParser.parse(
-        aheadOutput: ahead,
-        behindOutput: behind,
-        dirtyOutput: dirty,
-        at: now
-      )
-    } catch {
-      status = RepoStatus.error(error.localizedDescription, at: now)
-    }
+    status = await StatusChecker.check(repoPath: repoPath, runner: runner)
   }
 }

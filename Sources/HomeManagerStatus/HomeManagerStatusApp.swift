@@ -4,7 +4,7 @@ import SwiftUI
 
 @main
 struct HomeManagerStatusApp: App {
-  @StateObject private var checker: StatusChecker
+  @StateObject private var checker: AppStatusChecker
 
   init() {
     // Hide from Dock — this is a menu bar-only app.
@@ -13,7 +13,7 @@ struct HomeManagerStatusApp: App {
 
     let home = FileManager.default.homeDirectoryForCurrentUser.path
     let repoPath = "\(home)/.config/home-manager"
-    let checkerInstance = StatusChecker(repoPath: repoPath)
+    let checkerInstance = AppStatusChecker(repoPath: repoPath)
     _checker = StateObject(wrappedValue: checkerInstance)
 
     // Start polling after a small delay to allow the app to finish launching.
@@ -45,7 +45,7 @@ struct MenuBarLabel: View {
 // MARK: - Menu Content
 
 struct MenuContent: View {
-  @ObservedObject var checker: StatusChecker
+  @ObservedObject var checker: AppStatusChecker
 
   private var formattedTime: String {
     checker.status.checkedAt.formatted(date: .omitted, time: .standard)

@@ -66,104 +66,61 @@ struct MockJujutsuCommandRunner: JujutsuCommandRunner {
 
 // MARK: - StatusChecker Tests
 
-@MainActor
 final class StatusCheckerTests: XCTestCase {
 
-  func testRefreshSynced() async {
+  func testCheckSynced() async {
     let runner = MockJujutsuCommandRunner.fixed(ahead: "", behind: "", dirty: "clean")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
+    let status = await StatusChecker.check(repoPath: "/tmp/test", runner: runner)
 
-    await checker.refresh()
-
-    XCTAssertTrue(checker.status.isSynced)
-    XCTAssertFalse(checker.status.dirty)
-    XCTAssertNil(checker.status.error)
+    XCTAssertTrue(status.isSynced)
+    XCTAssertFalse(status.dirty)
+    XCTAssertNil(status.error)
   }
 
-  func testRefreshAhead() async {
+  func testCheckAhead() async {
     let runner = MockJujutsuCommandRunner.fixed(
       ahead: "abc123\ndef456\n", behind: "", dirty: "clean")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
+    let status = await StatusChecker.check(repoPath: "/tmp/test", runner: runner)
 
-    await checker.refresh()
-
-    XCTAssertEqual(checker.status.ahead, 2)
-    XCTAssertEqual(checker.status.behind, 0)
-    XCTAssertTrue(checker.status.isAhead)
+    XCTAssertEqual(status.ahead, 2)
+    XCTAssertEqual(status.behind, 0)
+    XCTAssertTrue(status.isAhead)
   }
 
-  func testRefreshBehind() async {
+  func testCheckBehind() async {
     let runner = MockJujutsuCommandRunner.fixed(
       ahead: "", behind: "abc123\ndef456\nghi789\n", dirty: "clean")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
+    let status = await StatusChecker.check(repoPath: "/tmp/test", runner: runner)
 
-    await checker.refresh()
-
-    XCTAssertEqual(checker.status.ahead, 0)
-    XCTAssertEqual(checker.status.behind, 3)
-    XCTAssertTrue(checker.status.isBehind)
+    XCTAssertEqual(status.ahead, 0)
+    XCTAssertEqual(status.behind, 3)
+    XCTAssertTrue(status.isBehind)
   }
 
-  func testRefreshDiverged() async {
+  func testCheckDiverged() async {
     let runner = MockJujutsuCommandRunner.fixed(
       ahead: "abc123\n", behind: "def456\nghi789\n", dirty: "dirty")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
+    let status = await StatusChecker.check(repoPath: "/tmp/test", runner: runner)
 
-    await checker.refresh()
-
-    XCTAssertEqual(checker.status.ahead, 1)
-    XCTAssertEqual(checker.status.behind, 2)
-    XCTAssertTrue(checker.status.dirty)
-    XCTAssertTrue(checker.status.isDiverged)
+    XCTAssertEqual(status.ahead, 1)
+    XCTAssertEqual(status.behind, 2)
+    XCTAssertTrue(status.dirty)
+    XCTAssertTrue(status.isDiverged)
   }
 
-  func testRefreshDirtyOnly() async {
+  func testCheckDirtyOnly() async {
     let runner = MockJujutsuCommandRunner.fixed(ahead: "", behind: "", dirty: "dirty")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
+    let status = await StatusChecker.check(repoPath: "/tmp/test", runner: runner)
 
-    await checker.refresh()
-
-    XCTAssertTrue(checker.status.isSynced)
-    XCTAssertTrue(checker.status.dirty)
+    XCTAssertTrue(status.isSynced)
+    XCTAssertTrue(status.dirty)
   }
 
-  func testRefreshWithError() async {
+  func testCheckWithError() async {
     let runner = MockJujutsuCommandRunner.failing(error: "jj: command not found")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
+    let status = await StatusChecker.check(repoPath: "/tmp/test", runner: runner)
 
-    await checker.refresh()
-
-    XCTAssertTrue(checker.status.hasError)
-    XCTAssertTrue(checker.status.error?.contains("jj: command not found") == true)
-  }
-
-  func testInitialStatusIsNotYetChecked() {
-    let runner = MockJujutsuCommandRunner.fixed(ahead: "", behind: "", dirty: "clean")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
-
-    XCTAssertTrue(checker.status.hasError)
-    XCTAssertEqual(checker.status.error, "Not yet checked")
-  }
-
-  func testRepoPathIsPreserved() {
-    let runner = MockJujutsuCommandRunner.fixed(ahead: "", behind: "", dirty: "clean")
-    let checker = StatusChecker(
-      repoPath: "/home/user/.config/home-manager", refreshInterval: 300, runner: runner)
-
-    XCTAssertEqual(checker.repoPath, "/home/user/.config/home-manager")
-  }
-
-  func testRefreshUpdatesStatus() async {
-    let runner = MockJujutsuCommandRunner.fixed(
-      ahead: "", behind: "abc123\n", dirty: "clean")
-    let checker = StatusChecker(repoPath: "/tmp/test", refreshInterval: 300, runner: runner)
-
-    // Initial state is error (not yet checked)
-    XCTAssertTrue(checker.status.hasError)
-
-    // After refresh, should be behind
-    await checker.refresh()
-    XCTAssertTrue(checker.status.isBehind)
-    XCTAssertEqual(checker.status.behind, 1)
+    XCTAssertTrue(status.hasError)
+    XCTAssertTrue(status.error?.contains("jj: command not found") == true)
   }
 }
