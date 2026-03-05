@@ -1,4 +1,3 @@
-import SwiftUI
 import XCTest
 
 @testable import HomeManagerStatus
@@ -50,60 +49,6 @@ final class RepoStatusTests: XCTestCase {
     XCTAssertFalse(status.isDiverged)
   }
 
-  // MARK: - Menu bar icon
-
-  func testMenuBarIconSynced() {
-    let status = RepoStatus.synced(at: fixedDate)
-    XCTAssertEqual(status.menuBarIcon, "checkmark.circle.fill")
-  }
-
-  func testMenuBarIconAhead() {
-    let status = RepoStatus(ahead: 1, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    XCTAssertEqual(status.menuBarIcon, "arrow.up.circle.fill")
-  }
-
-  func testMenuBarIconBehind() {
-    let status = RepoStatus(ahead: 0, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    XCTAssertEqual(status.menuBarIcon, "arrow.down.circle.fill")
-  }
-
-  func testMenuBarIconDiverged() {
-    let status = RepoStatus(ahead: 2, behind: 3, dirty: false, error: nil, checkedAt: fixedDate)
-    XCTAssertEqual(status.menuBarIcon, "arrow.up.arrow.down.circle.fill")
-  }
-
-  func testMenuBarIconError() {
-    let status = RepoStatus.error("oops", at: fixedDate)
-    XCTAssertEqual(status.menuBarIcon, "exclamationmark.triangle.fill")
-  }
-
-  // MARK: - Menu bar color
-
-  func testMenuBarColorSynced() {
-    let status = RepoStatus.synced(at: fixedDate)
-    XCTAssertEqual(status.menuBarColor, .green)
-  }
-
-  func testMenuBarColorAhead() {
-    let status = RepoStatus(ahead: 1, behind: 0, dirty: false, error: nil, checkedAt: fixedDate)
-    XCTAssertEqual(status.menuBarColor, .blue)
-  }
-
-  func testMenuBarColorBehind() {
-    let status = RepoStatus(ahead: 0, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    XCTAssertEqual(status.menuBarColor, .orange)
-  }
-
-  func testMenuBarColorDiverged() {
-    let status = RepoStatus(ahead: 1, behind: 1, dirty: false, error: nil, checkedAt: fixedDate)
-    XCTAssertEqual(status.menuBarColor, .yellow)
-  }
-
-  func testMenuBarColorError() {
-    let status = RepoStatus.error("oops", at: fixedDate)
-    XCTAssertEqual(status.menuBarColor, .red)
-  }
-
   // MARK: - Menu bar text
 
   func testMenuBarTextSynced() {
@@ -141,7 +86,7 @@ final class RepoStatusTests: XCTestCase {
 
   func testMenuBarLabelSyncedClean() {
     let status = RepoStatus.synced(dirty: false, at: fixedDate)
-    XCTAssertEqual(status.menuBarLabel, "")
+    XCTAssertEqual(status.menuBarLabel, "\u{2713}")
   }
 
   func testMenuBarLabelSyncedDirty() {

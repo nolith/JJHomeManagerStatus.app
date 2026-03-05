@@ -1,4 +1,4 @@
-import SwiftUI
+import Foundation
 
 /// Represents the current status of the jj repository relative to trunk().
 struct RepoStatus: Equatable {
@@ -32,33 +32,7 @@ struct RepoStatus: Equatable {
   var isDiverged: Bool { ahead > 0 && behind > 0 && error == nil }
   var hasError: Bool { error != nil }
 
-  /// The SF Symbol name to display in the menu bar.
-  var menuBarIcon: String {
-    if hasError {
-      return "exclamationmark.triangle.fill"
-    }
-    if isDiverged {
-      return "arrow.up.arrow.down.circle.fill"
-    }
-    if isAhead {
-      return "arrow.up.circle.fill"
-    }
-    if isBehind {
-      return "arrow.down.circle.fill"
-    }
-    return "checkmark.circle.fill"
-  }
-
-  /// The color for the menu bar icon.
-  var menuBarColor: Color {
-    if hasError { return .red }
-    if isDiverged { return .yellow }
-    if isAhead { return .blue }
-    if isBehind { return .orange }
-    return .green
-  }
-
-  /// Compact text shown next to the icon in the menu bar.
+  /// Compact text shown in the menu bar.
   var menuBarText: String {
     if hasError { return "!" }
     if isDiverged { return "\u{2191}\(ahead)\u{2193}\(behind)" }
@@ -67,11 +41,14 @@ struct RepoStatus: Equatable {
     return ""
   }
 
-  /// Full text for the menu bar label (icon is handled separately via Image).
+  /// Full text for the menu bar label.
   var menuBarLabel: String {
     var label = menuBarText
     if dirty && !hasError {
       label += "\u{25CF}"  // ● dot
+    }
+    if label.isEmpty {
+      return "\u{2713}"  // ✓ checkmark
     }
     return label
   }

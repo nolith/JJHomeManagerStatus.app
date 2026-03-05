@@ -36,14 +36,8 @@ struct MenuBarLabel: View {
   let status: RepoStatus
 
   var body: some View {
-    HStack(spacing: 2) {
-      Image(systemName: status.menuBarIcon)
-        .symbolRenderingMode(.palette)
-      if !status.menuBarLabel.isEmpty {
-        Text(status.menuBarLabel)
-          .monospacedDigit()
-      }
-    }
+    Text(status.menuBarLabel)
+      .monospacedDigit()
   }
 }
 
