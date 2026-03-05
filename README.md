@@ -25,7 +25,7 @@ Add the flake input to your `flake.nix`:
 
 ```nix
 inputs.jj-home-manager-status = {
-  url = "github:nolith/JJHomeManagerStatus.app";
+  url = "git+https://tangled.org/nolith.tngl.sh/JJHomeManagerStatus.app";
   inputs.nixpkgs.follows = "nixpkgs";
 };
 ```
