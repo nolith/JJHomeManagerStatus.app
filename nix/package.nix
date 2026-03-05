@@ -28,6 +28,12 @@ swift.stdenv.mkDerivation {
     apple-sdk_14
   ];
 
+  # Tests cannot run during nix build: SwiftPM's `swift-test` requires
+  # `xcrun --find xctest` which needs Xcode, and corelibs-xctest in nix
+  # only provides the library, not the runner. No Swift package in nixpkgs
+  # has solved this — all have doCheck disabled or commented out.
+  doCheck = false;
+
   # buildPhase is provided automatically by swiftpm's setup hook:
   #   swift-build -c release
 
