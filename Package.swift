@@ -7,15 +7,26 @@ let package = Package(
   platforms: [
     .macOS(.v13)
   ],
+  products: [
+    .library(name: "HMStatus", targets: ["HMStatus"])
+  ],
   targets: [
+    // Cross-platform library — pure Foundation, no Apple frameworks
+    .target(
+      name: "HMStatus",
+      path: "Sources/HMStatus"
+    ),
+    // macOS menu bar app
     .executableTarget(
       name: "HomeManagerStatus",
+      dependencies: ["HMStatus"],
       path: "Sources/HomeManagerStatus"
     ),
+    // Cross-platform tests for the library
     .testTarget(
-      name: "HomeManagerStatusTests",
-      dependencies: ["HomeManagerStatus"],
-      path: "Tests/HomeManagerStatusTests"
+      name: "HMStatusTests",
+      dependencies: ["HMStatus"],
+      path: "Tests/HMStatusTests"
     ),
   ]
 )

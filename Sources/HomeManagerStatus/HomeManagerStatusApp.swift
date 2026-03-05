@@ -1,4 +1,5 @@
 import AppKit
+import HMStatus
 import SwiftUI
 
 @main

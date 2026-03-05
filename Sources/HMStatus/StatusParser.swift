@@ -1,13 +1,13 @@
 import Foundation
 
 /// Pure functions for parsing jj command output into RepoStatus.
-enum StatusParser {
+public enum StatusParser {
   /// Parse the output of `jj log` that lists commit short IDs (one per line)
   /// and return the count of commits.
   ///
   /// - Parameter output: Raw stdout from jj log command
   /// - Returns: Number of commits listed
-  static func parseCommitCount(from output: String) -> Int {
+  public static func parseCommitCount(from output: String) -> Int {
     let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty {
       return 0
@@ -20,7 +20,7 @@ enum StatusParser {
   /// - Parameter output: Raw stdout, expected to be "clean" or "dirty"
   /// - Returns: `true` if the working copy has changes, `false` if clean
   /// - Throws: If the output is unexpected
-  static func parseDirtyStatus(from output: String) throws -> Bool {
+  public static func parseDirtyStatus(from output: String) throws -> Bool {
     let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
     switch trimmed {
     case "clean":
@@ -40,7 +40,7 @@ enum StatusParser {
   ///   - dirtyOutput: Output from the "dirty check" command
   ///   - date: Timestamp for the check (defaults to now)
   /// - Returns: A fully populated RepoStatus
-  static func parse(
+  public static func parse(
     aheadOutput: String,
     behindOutput: String,
     dirtyOutput: String,
@@ -68,10 +68,10 @@ enum StatusParser {
     )
   }
 
-  enum ParserError: LocalizedError {
+  public enum ParserError: LocalizedError {
     case unexpectedDirtyOutput(String)
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
       switch self {
       case .unexpectedDirtyOutput(let output):
         return "Unexpected dirty status output: '\(output)'"

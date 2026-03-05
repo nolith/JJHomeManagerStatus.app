@@ -1,7 +1,7 @@
 import Foundation
 
 /// Protocol for running jj commands. Abstracted for testability.
-protocol JujutsuCommandRunner {
+public protocol JujutsuCommandRunner {
   /// Run a jj command with the given arguments against a repository.
   ///
   /// - Parameters:
@@ -13,17 +13,17 @@ protocol JujutsuCommandRunner {
 }
 
 /// Real implementation that executes jj via Process.
-struct LiveJujutsuCommandRunner: JujutsuCommandRunner {
+public struct LiveJujutsuCommandRunner: JujutsuCommandRunner {
   /// Additional paths to add to the PATH environment variable.
   /// Needed because macOS GUI apps don't inherit the user's shell PATH.
-  let additionalPaths: [String]
+  public let additionalPaths: [String]
 
-  init(additionalPaths: [String] = []) {
+  public init(additionalPaths: [String] = []) {
     self.additionalPaths = additionalPaths
   }
 
   /// Discover a reasonable set of Nix-aware PATH entries for the current user.
-  static func nixAwarePaths() -> [String] {
+  public static func nixAwarePaths() -> [String] {
     let home = FileManager.default.homeDirectoryForCurrentUser.path
     return [
       "\(home)/.nix-profile/bin",
@@ -35,7 +35,7 @@ struct LiveJujutsuCommandRunner: JujutsuCommandRunner {
     ]
   }
 
-  func run(args: [String], repoPath: String) async throws -> String {
+  public func run(args: [String], repoPath: String) async throws -> String {
     try await withCheckedThrowingContinuation { continuation in
       let process = Process()
       process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
@@ -84,11 +84,11 @@ struct LiveJujutsuCommandRunner: JujutsuCommandRunner {
     }
   }
 
-  enum CommandError: LocalizedError {
+  public enum CommandError: LocalizedError {
     case launchFailed(String)
     case nonZeroExit(status: Int32, stderr: String)
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
       switch self {
       case .launchFailed(let reason):
         return "Failed to launch jj: \(reason)"

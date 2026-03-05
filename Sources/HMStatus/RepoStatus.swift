@@ -1,39 +1,47 @@
 import Foundation
 
 /// Represents the current status of the jj repository relative to trunk().
-struct RepoStatus: Equatable {
+public struct RepoStatus: Equatable {
   /// Number of commits on the current working copy ancestry that are not on trunk().
-  let ahead: Int
+  public let ahead: Int
   /// Number of commits on trunk() that are not on the current working copy ancestry.
-  let behind: Int
+  public let behind: Int
   /// Whether the working copy has uncommitted changes (non-empty).
-  let dirty: Bool
+  public let dirty: Bool
   /// If non-nil, an error occurred while checking status.
-  let error: String?
+  public let error: String?
 
   /// The last time this status was successfully checked.
-  let checkedAt: Date
+  public let checkedAt: Date
+
+  public init(ahead: Int, behind: Int, dirty: Bool, error: String?, checkedAt: Date) {
+    self.ahead = ahead
+    self.behind = behind
+    self.dirty = dirty
+    self.error = error
+    self.checkedAt = checkedAt
+  }
 
   // MARK: - Convenience initializers
 
-  static func synced(dirty: Bool = false, at date: Date = Date()) -> RepoStatus {
+  public static func synced(dirty: Bool = false, at date: Date = Date()) -> RepoStatus {
     RepoStatus(ahead: 0, behind: 0, dirty: dirty, error: nil, checkedAt: date)
   }
 
-  static func error(_ message: String, at date: Date = Date()) -> RepoStatus {
+  public static func error(_ message: String, at date: Date = Date()) -> RepoStatus {
     RepoStatus(ahead: 0, behind: 0, dirty: false, error: message, checkedAt: date)
   }
 
   // MARK: - Computed properties
 
-  var isSynced: Bool { ahead == 0 && behind == 0 && error == nil }
-  var isAhead: Bool { ahead > 0 && error == nil }
-  var isBehind: Bool { behind > 0 && error == nil }
-  var isDiverged: Bool { ahead > 0 && behind > 0 && error == nil }
-  var hasError: Bool { error != nil }
+  public var isSynced: Bool { ahead == 0 && behind == 0 && error == nil }
+  public var isAhead: Bool { ahead > 0 && error == nil }
+  public var isBehind: Bool { behind > 0 && error == nil }
+  public var isDiverged: Bool { ahead > 0 && behind > 0 && error == nil }
+  public var hasError: Bool { error != nil }
 
   /// Compact text shown in the menu bar.
-  var menuBarText: String {
+  public var menuBarText: String {
     if hasError { return "!" }
     if isDiverged { return "\u{2191}\(ahead)\u{2193}\(behind)" }
     if isAhead { return "\u{2191}\(ahead)" }
@@ -42,7 +50,7 @@ struct RepoStatus: Equatable {
   }
 
   /// Full text for the menu bar label.
-  var menuBarLabel: String {
+  public var menuBarLabel: String {
     var label = menuBarText
     if dirty && !hasError {
       label += "\u{25CF}"  // ● dot
@@ -54,7 +62,7 @@ struct RepoStatus: Equatable {
   }
 
   /// Human-readable status description for the dropdown.
-  var statusDescription: String {
+  public var statusDescription: String {
     if hasError {
       return "Error: \(error!)"
     }

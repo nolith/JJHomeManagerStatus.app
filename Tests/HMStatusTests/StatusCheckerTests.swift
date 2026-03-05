@@ -1,7 +1,7 @@
 import Foundation
 import XCTest
 
-@testable import HomeManagerStatus
+@testable import HMStatus
 
 // MARK: - Mock Command Runner
 

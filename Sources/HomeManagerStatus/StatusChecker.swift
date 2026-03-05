@@ -1,4 +1,5 @@
 import Foundation
+import HMStatus
 import SwiftUI
 
 /// Orchestrates periodic jj status checks and publishes results for the UI.

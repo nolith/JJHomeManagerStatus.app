@@ -1,6 +1,6 @@
 import XCTest
 
-@testable import HomeManagerStatus
+@testable import HMStatus
 
 final class RepoStatusTests: XCTestCase {
   let fixedDate = Date(timeIntervalSince1970: 1_700_000_000)
