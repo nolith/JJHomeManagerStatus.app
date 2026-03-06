@@ -128,6 +128,8 @@ assert_eq "short output" "↑2" "$out"
 
 out=$("$HM_STATUS" "$WORK/repo3")
 assert_contains "long: ahead" "2 commits ahead of trunk" "$out"
+assert_contains "long: ahead commit 2" "· local commit 2" "$out"
+assert_contains "long: ahead commit 1" "· local commit 1" "$out"
 
 assert_exit "exit 1 with --fail (ahead)" 1 "$HM_STATUS" --fail "$WORK/repo3"
 
@@ -157,26 +159,57 @@ assert_eq "short output" "↓2" "$out"
 
 out=$("$HM_STATUS" "$WORK/repo4")
 assert_contains "long: behind" "2 commits behind trunk" "$out"
+assert_contains "long: behind commit 2" "· remote commit 2" "$out"
+assert_contains "long: behind commit 1" "· remote commit 1" "$out"
 
 assert_exit "exit 1 with --fail (behind)" 1 "$HM_STATUS" --fail "$WORK/repo4"
 
-# ── Test 5: ahead + dirty ──────────────────────────────────────────
+# ── Test 5: many commits behind (truncation) ──────────────────────
+
+echo ""
+echo "-- many commits behind (truncation) --"
+make_repo "$WORK/repo5"
+
+initial=$(jj log -R "$WORK/repo5" -r 'main@origin' --no-graph -T 'commit_id.short()')
+
+# Create 7 commits and push them to advance main@origin.
+for i in $(seq 1 7); do
+  echo "remote$i" >"${WORK}/repo5/remote${i}.txt"
+  jj describe -m "remote change $i" -R "$WORK/repo5" >/dev/null 2>&1
+  jj new -R "$WORK/repo5" >/dev/null 2>&1
+done
+jj bookmark set main -r @- -R "$WORK/repo5" --allow-backwards >/dev/null 2>&1
+jj git push --bookmark main -R "$WORK/repo5" >/dev/null 2>&1
+
+# Move back to the initial commit.
+jj new "$initial" -R "$WORK/repo5" >/dev/null 2>&1
+
+out=$("$HM_STATUS" --short "$WORK/repo5")
+assert_eq "short output" "↓7" "$out"
+
+out=$("$HM_STATUS" "$WORK/repo5")
+assert_contains "long: behind" "7 commits behind trunk" "$out"
+assert_contains "long: shows commit 7" "· remote change 7" "$out"
+assert_contains "long: shows commit 3" "· remote change 3" "$out"
+assert_contains "long: truncation" "· ... and 2 more" "$out"
+
+# ── Test 6: ahead + dirty ──────────────────────────────────────────
 
 echo ""
 echo "-- ahead + dirty --"
-make_repo "$WORK/repo5"
-echo "change" >"${WORK}/repo5/change.txt"
-jj describe -m "local commit" -R "$WORK/repo5" >/dev/null 2>&1
-jj new -R "$WORK/repo5" >/dev/null 2>&1
-echo "uncommitted" >"${WORK}/repo5/uncommitted.txt"
-jj log -R "$WORK/repo5" -r @ --no-graph -T 'empty' >/dev/null 2>&1
+make_repo "$WORK/repo6"
+echo "change" >"${WORK}/repo6/change.txt"
+jj describe -m "local commit" -R "$WORK/repo6" >/dev/null 2>&1
+jj new -R "$WORK/repo6" >/dev/null 2>&1
+echo "uncommitted" >"${WORK}/repo6/uncommitted.txt"
+jj log -R "$WORK/repo6" -r @ --no-graph -T 'empty' >/dev/null 2>&1
 
-out=$("$HM_STATUS" --short "$WORK/repo5")
+out=$("$HM_STATUS" --short "$WORK/repo6")
 assert_eq "short output" "↑1●" "$out"
 
-assert_exit "exit 1 with --fail (ahead+dirty)" 1 "$HM_STATUS" --fail "$WORK/repo5"
+assert_exit "exit 1 with --fail (ahead+dirty)" 1 "$HM_STATUS" --fail "$WORK/repo6"
 
-# ── Test 6: error case (not a jj repo) ─────────────────────────────
+# ── Test 7: error case (not a jj repo) ─────────────────────────────
 
 echo ""
 echo "-- error case --"

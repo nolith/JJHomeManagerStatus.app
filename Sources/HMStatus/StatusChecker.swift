@@ -15,15 +15,18 @@ public enum StatusChecker {
     at date: Date = Date()
   ) async -> RepoStatus {
     do {
-      // Use @- (parent of working copy) to exclude the jj working copy
+      // Use fork_point(@|trunk()) as the base for both ahead/behind checks.
+      // This finds the best common ancestor of @ and trunk(), which is more
+      // correct than set difference when there's divergence.
+      // We use @- (parent of working copy) to exclude the jj working copy
       // change itself — it's always present and its emptiness/dirtiness
       // is tracked separately via the dirty check below.
       async let aheadOutput = runner.run(
         args: [
           "log",
-          "-r", "::@- ~ ::trunk()",
+          "-r", "fork_point(@|trunk())..@-",
           "--no-graph",
-          "-T", "commit_id.short() ++ \"\\n\"",
+          "-T", "description.first_line() ++ \"\\n\"",
         ],
         repoPath: repoPath
       )
@@ -31,9 +34,9 @@ public enum StatusChecker {
       async let behindOutput = runner.run(
         args: [
           "log",
-          "-r", "::trunk() ~ ::@-",
+          "-r", "fork_point(@|trunk())..trunk()",
           "--no-graph",
-          "-T", "commit_id.short() ++ \"\\n\"",
+          "-T", "description.first_line() ++ \"\\n\"",
         ],
         repoPath: repoPath
       )

@@ -2,17 +2,17 @@ import Foundation
 
 /// Pure functions for parsing jj command output into RepoStatus.
 public enum StatusParser {
-  /// Parse the output of `jj log` that lists commit short IDs (one per line)
-  /// and return the count of commits.
+  /// Parse the output of `jj log` that lists one commit description per line.
   ///
   /// - Parameter output: Raw stdout from jj log command
-  /// - Returns: Number of commits listed
-  public static func parseCommitCount(from output: String) -> Int {
+  /// - Returns: Number of commits and their first-line descriptions
+  public static func parseCommitLines(from output: String) -> (count: Int, descriptions: [String]) {
     let trimmed = output.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty {
-      return 0
+      return (0, [])
     }
-    return trimmed.components(separatedBy: "\n").count
+    let lines = trimmed.components(separatedBy: "\n")
+    return (lines.count, lines)
   }
 
   /// Parse the output of the dirty-check command.
@@ -46,8 +46,8 @@ public enum StatusParser {
     dirtyOutput: String,
     at date: Date = Date()
   ) -> RepoStatus {
-    let ahead = parseCommitCount(from: aheadOutput)
-    let behind = parseCommitCount(from: behindOutput)
+    let (ahead, aheadCommits) = parseCommitLines(from: aheadOutput)
+    let (behind, behindCommits) = parseCommitLines(from: behindOutput)
 
     let dirty: Bool
     do {
@@ -64,6 +64,8 @@ public enum StatusParser {
       behind: behind,
       dirty: dirty,
       error: nil,
+      aheadCommits: aheadCommits,
+      behindCommits: behindCommits,
       checkedAt: date
     )
   }

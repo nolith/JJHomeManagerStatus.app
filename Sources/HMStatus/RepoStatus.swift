@@ -10,15 +10,30 @@ public struct RepoStatus: Equatable {
   public let dirty: Bool
   /// If non-nil, an error occurred while checking status.
   public let error: String?
+  /// First line of each commit description for commits ahead of trunk (newest first).
+  public let aheadCommits: [String]
+  /// First line of each commit description for commits behind trunk (newest first).
+  public let behindCommits: [String]
 
   /// The last time this status was successfully checked.
   public let checkedAt: Date
 
-  public init(ahead: Int, behind: Int, dirty: Bool, error: String?, checkedAt: Date) {
+  /// Maximum number of commit descriptions to display in the dropdown.
+  public static let maxDisplayedCommits = 5
+  /// Maximum character width for a single commit description line.
+  public static let maxDescriptionLength = 72
+
+  public init(
+    ahead: Int, behind: Int, dirty: Bool, error: String?,
+    aheadCommits: [String] = [], behindCommits: [String] = [],
+    checkedAt: Date
+  ) {
     self.ahead = ahead
     self.behind = behind
     self.dirty = dirty
     self.error = error
+    self.aheadCommits = aheadCommits
+    self.behindCommits = behindCommits
     self.checkedAt = checkedAt
   }
 
@@ -74,9 +89,13 @@ public struct RepoStatus: Equatable {
     } else {
       if ahead > 0 {
         parts.append("\(ahead) commit\(ahead == 1 ? "" : "s") ahead of trunk")
+        parts.append(
+          contentsOf: Self.formatCommitList(aheadCommits, total: ahead))
       }
       if behind > 0 {
         parts.append("\(behind) commit\(behind == 1 ? "" : "s") behind trunk")
+        parts.append(
+          contentsOf: Self.formatCommitList(behindCommits, total: behind))
       }
     }
 
@@ -87,5 +106,35 @@ public struct RepoStatus: Equatable {
     }
 
     return parts.joined(separator: "\n")
+  }
+
+  // MARK: - Commit list formatting
+
+  /// Format a list of commit descriptions for display, with truncation.
+  static func formatCommitList(_ commits: [String], total: Int) -> [String] {
+    let displayCount = min(commits.count, maxDisplayedCommits)
+    var lines: [String] = []
+
+    for i in 0..<displayCount {
+      let desc = commits[i]
+      let label = desc.isEmpty ? "(no description)" : truncate(desc, to: maxDescriptionLength)
+      lines.append("  \u{00B7} \(label)")
+    }
+
+    let remaining = total - displayCount
+    if remaining > 0 {
+      lines.append("  \u{00B7} ... and \(remaining) more")
+    }
+
+    return lines
+  }
+
+  /// Truncate a string to a maximum length, appending "…" if needed.
+  static func truncate(_ string: String, to maxLength: Int) -> String {
+    if string.count <= maxLength {
+      return string
+    }
+    let endIndex = string.index(string.startIndex, offsetBy: maxLength - 1)
+    return string[string.startIndex..<endIndex] + "\u{2026}"
   }
 }
