@@ -46,51 +46,126 @@ struct MenuBarLabel: View {
 
 struct MenuContent: View {
   @ObservedObject var checker: AppStatusChecker
+  @State private var ghosttyLaunchErrorMessage: String?
+
+  private let ghosttyLauncher = GhosttyLauncher()
 
   private var formattedTime: String {
     checker.status.checkedAt.formatted(date: .omitted, time: .standard)
   }
 
   var body: some View {
-    // Status section
-    Section {
-      ForEach(
-        checker.status.statusDescription.components(separatedBy: "\n"), id: \.self
-      ) { line in
-        Text(line)
+    Group {
+      // Status section
+      Section {
+        ForEach(
+          checker.status.statusDescription.components(separatedBy: "\n"), id: \.self
+        ) { line in
+          Text(line)
+        }
+
+        Text("Last checked: \(formattedTime)")
+          .foregroundStyle(.secondary)
       }
 
-      Text("Last checked: \(formattedTime)")
-        .foregroundStyle(.secondary)
-    }
+      Divider()
 
-    Divider()
+      // Actions
+      Section {
+        Button("Refresh Now") {
+          Task { await checker.refresh() }
+        }
+        .keyboardShortcut("r")
 
-    // Actions
-    Section {
-      Button("Refresh Now") {
-        Task { await checker.refresh() }
+        Button("Open in Ghostty") {
+          openInGhostty(path: checker.repoPath)
+        }
+        .keyboardShortcut("t")
       }
-      .keyboardShortcut("r")
 
-      Button("Open in Ghostty") {
-        openInGhostty(path: checker.repoPath)
+      Divider()
+
+      Button("Quit") {
+        NSApplication.shared.terminate(nil)
       }
-      .keyboardShortcut("t")
+      .keyboardShortcut("q")
     }
-
-    Divider()
-
-    Button("Quit") {
-      NSApplication.shared.terminate(nil)
+    .alert(
+      "Unable to Open Ghostty",
+      isPresented: Binding(
+        get: { ghosttyLaunchErrorMessage != nil },
+        set: { isPresented in
+          if !isPresented {
+            ghosttyLaunchErrorMessage = nil
+          }
+        }
+      )
+    ) {
+      Button("OK", role: .cancel) {}
+    } message: {
+      Text(ghosttyLaunchErrorMessage ?? "Unknown error")
     }
-    .keyboardShortcut("q")
   }
 
   private func openInGhostty(path: String) {
+    do {
+      try ghosttyLauncher.openNewWindow(path: path)
+    } catch {
+      ghosttyLaunchErrorMessage = error.localizedDescription
+    }
+  }
+}
+
+struct GhosttyLauncher {
+  enum LaunchError: LocalizedError {
+    case openCommandExecutionFailed(String)
+    case openCommandFailed(String)
+
+    var errorDescription: String? {
+      switch self {
+      case .openCommandExecutionFailed(let details):
+        return "Could not run open for Ghostty. \(details)"
+      case .openCommandFailed(let details):
+        if details.isEmpty {
+          return "Ghostty could not be opened. Make sure Ghostty is installed."
+        }
+        return "Ghostty could not be opened. \(details)"
+      }
+    }
+  }
+
+  func makeOpenArguments(path: String) -> [String] {
+    let shell = ProcessInfo.processInfo.environment["SHELL"] ?? "/bin/zsh"
+    let shellCommand = "cd \(shellQuoted(path)) && exec \(shellQuoted(shell))"
+    return ["-n", "-a", "Ghostty", "--args", "-e", "/bin/sh", "-lc", shellCommand]
+  }
+
+  func openNewWindow(path: String) throws {
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-    process.arguments = ["-a", "Ghostty", "--args", "-e", "cd \(path) && exec $SHELL"]
-    try? process.run()
+    process.arguments = makeOpenArguments(path: path)
+
+    let stderr = Pipe()
+    process.standardError = stderr
+
+    do {
+      try process.run()
+    } catch {
+      throw LaunchError.openCommandExecutionFailed(error.localizedDescription)
+    }
+
+    process.waitUntilExit()
+
+    guard process.terminationStatus == 0 else {
+      let data = stderr.fileHandleForReading.readDataToEndOfFile()
+      let output =
+        String(data: data, encoding: .utf8)?
+        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+      throw LaunchError.openCommandFailed(output)
+    }
+  }
+
+  private func shellQuoted(_ value: String) -> String {
+    "'\(value.replacingOccurrences(of: "'", with: "'\\''"))'"
   }
 }
