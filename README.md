@@ -68,3 +68,8 @@ swift build -c release
 - macOS 13.0 or later
 - Jujutsu (`jj`) installed and available in PATH
 - A jj-managed repository at `~/.config/home-manager`
+
+## License
+
+JJHomeManagerStatus.app is free software, licensed under the GNU General Public
+License, version 3 or any later version (GPL-3.0-or-later). See [LICENSE](LICENSE).
